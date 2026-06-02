@@ -6,6 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 9</title>
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+  <script>
+    window.TrackJS && TrackJS.install({ 
+      token: "df869baf6a304b6784335e8030aa16f2"
+    });
+  </script>
 
   <style>
     button {
@@ -88,20 +94,166 @@
   </main>
 
   <script>
+    class CalculatorError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = 'CalculatorError';
+      }
+    }
+
+    window.onerror = function (message, source, lineno, colno, error) {
+      console.log('Global error caught by window.onerror:', message);
+      console.log('Error details:', source, lineno, colno, error);
+    };
+
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
-      let output = document.querySelector('output');
-      let firstNum = document.querySelector('#first-num').value;
-      let secondNum = document.querySelector('#second-num').value;
-      let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+
+      try {
+        //set up error handling
+        let output = document.querySelector('output');
+        let firstNumInput = document.querySelector('#first-num');
+        let secondNumInput = document.querySelector('#second-num');
+        let operatorInput = document.querySelector('#operator');
+
+        if (!output) {
+          throw new CalculatorError('The calculator output element is missing.');
+        }
+
+        if (!firstNumInput || !secondNumInput || !operatorInput) {
+          throw new CalculatorError('The calculator form is missing a required input.');
+        }
+
+        let firstValue = firstNumInput.value.trim();
+        let secondValue = secondNumInput.value.trim();
+        let firstNum = Number(firstValue);
+        let secondNum = Number(secondValue);
+        let operator = operatorInput.value;
+        let result;
+
+        if (firstValue === '' || secondValue === '' || Number.isNaN(firstNum) || Number.isNaN(secondNum)) {
+          throw new CalculatorError('Both calculator inputs must be valid numbers.');
+        }
+
+        switch (operator) {
+          case '+':
+            result = firstNum + secondNum;
+            break;
+          case '-':
+            result = firstNum - secondNum;
+            break;
+          case '*':
+            result = firstNum * secondNum;
+            break;
+          case '/':
+            if (secondNum === 0) {
+              throw new CalculatorError('Cannot divide by zero.');
+            }
+            result = firstNum / secondNum;
+            break;
+          default:
+            throw new CalculatorError(`Unsupported operator: ${operator}`);
+        }
+
+        output.innerHTML = result;
+      } catch (err) { //deals with the error
+        console.error('Calculator error:', err);
+        let output = document.querySelector('output');
+        if (output) {
+          output.innerHTML = err.message;
+        }
+      } finally { //runs no matter what
+        console.log('Calculator submit attempt finished.');
+      }
     });
 
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
 
     // Start your code here
     // You may move this JS to another file if you wish
+
+    //example data
+    const demoUser = {
+      name: 'John',
+      course: 'CSE 110',
+      lab: 9,
+      tools: ['console', 'DevTools', 'JavaScript']
+    };
+
+    const demoScores = [
+      { item: 'HTML', status: 'ready', points: 10 },
+      { item: 'CSS', status: 'ready', points: 10 },
+      { item: 'JavaScript', status: 'in progress', points: 15 }
+    ];
+
+    //helpers
+    function traceDemo() {
+      console.trace('Console trace demo: this shows the call stack.');
+    }
+
+    function callTraceDemo() {
+      traceDemo();
+    }
+
+    //loop through all buttons and listens for clicks & logs them
+    errorBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const demoName = btn.textContent;
+
+        switch (demoName) {
+          case 'Console Log':
+            console.log('Console log demo:', demoUser);
+            break;
+          case 'Console Error':
+            console.error('Console error demo');
+            break;
+          case 'Console Count':
+            console.count('Console count demo');
+            break;
+          case 'Console Warn':
+            console.warn('Console warn demo', demoUser.lab);
+            break;
+          case 'Console Assert':
+            console.assert(demoScores.length > 3, 'Console assert demo');
+            break;
+          case 'Console Clear':
+            console.clear();
+            break;
+          case 'Console Dir':
+            console.dir(document.querySelector('form'));
+            break;
+          case 'Console dirxml':
+            console.dirxml(document.querySelector('main'));
+            break;
+          case 'Console Group Start':
+            console.group('Console group demo');
+            console.log('This message is inside the group.');
+            console.table(demoScores);
+            break;
+          case 'Console Group End':
+            console.log('Ending the current console group.');
+            console.groupEnd();
+            break;
+          case 'Console Table':
+            console.table(demoScores);
+            break;
+          case 'Start Timer':
+            console.time('Timer demo');
+            console.log('Timer demo started.');
+            break;
+          case 'End Timer':
+            console.timeEnd('Timer demo');
+            break;
+          case 'Console Trace':
+            callTraceDemo();
+            break;
+          case 'Trigger a Global Error':
+            throw new Error('Global error button was clicked.');
+        }
+      });
+    });
+
   </script>
 </body>
 
